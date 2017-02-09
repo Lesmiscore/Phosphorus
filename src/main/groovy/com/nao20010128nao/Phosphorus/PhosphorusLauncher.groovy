@@ -1,7 +1,6 @@
 package com.nao20010128nao.Phosphorus
 
 import com.nao20010128nao.Phosphorus.phar.PharParser
-import com.nao20010128nao.Phosphorus.phar.events.FileManifestEvent
 import com.nao20010128nao.Phosphorus.phar.events.RawFileEvent
 import com.nao20010128nao.Phosphorus.phar.events.StubEvent
 import joptsimple.OptionParser
@@ -10,8 +9,8 @@ import java.util.regex.Pattern
 
 OptionParser opt=new OptionParser()
 opt.accepts("input").withRequiredArg()
-opt.accepts("output")
-opt.accepts("stub")
+opt.accepts("output").withOptionalArg()
+opt.accepts("stub").withOptionalArg()
 def result=opt.parse(args)
 
 File input,output,stub
