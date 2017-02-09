@@ -15,4 +15,5 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     compile 'com.google.guava:guava:21.0'
     compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-1'
+    compile 'org.apache.commons:commons-compress:1.13'
 }
