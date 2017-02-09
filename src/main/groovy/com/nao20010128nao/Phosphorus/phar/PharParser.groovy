@@ -56,6 +56,16 @@ class PharParser implements Iterable<PharParserEvent>{
                     stubEnd=stubEnd+i+STUB_FINAL_C.length
                 }
             }
+            channel.seek stubEnd
+            channel.read tmp,0,2
+            def tmpStr=new String(tmp,0,2)
+            if(tmpStr.startsWith("\r\n")){
+                stubEnd+=2
+            }else if(tmpStr.startsWith("\r")){
+                stubEnd++
+            }else if(tmpStr.startsWith("\n")){
+                stubEnd++
+            }
         } finally {
             if(channel!=null)channel.close()
         }
@@ -66,7 +76,6 @@ class PharParser implements Iterable<PharParserEvent>{
             byte[] readBuf=new byte[stubEnd]
             buffer.get readBuf
             list+=new StubEvent(readBuf)
-            buffer.skip 2
         }
         //read manifest in LITTLE ENDIAN
         int manifestTotal=buffer.leInt
