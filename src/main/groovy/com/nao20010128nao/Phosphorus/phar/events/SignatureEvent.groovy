@@ -22,12 +22,12 @@ class SignatureEvent implements PharParserEvent{
 
     @Memoized
     boolean isMd5(){
-        sigFlags&0x0001!=0
+        (sigFlags&0x0001)!=0
     }
 
     @Memoized
     boolean isSha1(){
-        sigFlags&0x0002!=0
+        (sigFlags&0x0002)!=0
     }
 
     @Memoized
@@ -38,6 +38,13 @@ class SignatureEvent implements PharParserEvent{
     @Memoized
     boolean isValidSha1(){
         sha1&hash.length==20
+    }
+
+    @Memoized
+    String getHashNameFromFlag(){
+        if(md5)"md5"
+        else if(sha1)"sha-1"
+        else null
     }
 
     int getId() {

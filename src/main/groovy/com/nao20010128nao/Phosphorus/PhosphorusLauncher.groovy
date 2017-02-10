@@ -2,6 +2,7 @@ package com.nao20010128nao.Phosphorus
 
 import com.nao20010128nao.Phosphorus.phar.PharParser
 import com.nao20010128nao.Phosphorus.phar.events.RawFileEvent
+import com.nao20010128nao.Phosphorus.phar.events.SignatureValidatedEvent
 import com.nao20010128nao.Phosphorus.phar.events.StubEvent
 import joptsimple.OptionParser
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
@@ -88,6 +89,9 @@ parser.startReading {event->
         dest.parentFile.mkdirs()
         dest.bytes=decompress(event)
         extractedCount++
+    }
+    if(event instanceof SignatureValidatedEvent){
+        println "Signature check: ${event.correct?"OK":"NG"}"
     }
 }
 

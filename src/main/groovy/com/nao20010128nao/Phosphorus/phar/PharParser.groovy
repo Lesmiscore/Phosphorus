@@ -4,6 +4,8 @@ import com.google.common.primitives.Bytes
 import com.nao20010128nao.Phosphorus.phar.events.*
 import org.apache.commons.codec.binary.Hex
 
+import java.security.MessageDigest
+
 /**
  * Created by nao on 2017/02/09.
  */
@@ -187,6 +189,7 @@ class PharParser implements Iterable<PharParserEvent>{
             }
         } finally {
             if(channel!=null)channel.close()
+            channel=null
         }
 
 
@@ -261,16 +264,34 @@ class PharParser implements Iterable<PharParserEvent>{
         byte[] hash=new byte[hashSize]
         buffer.get hash
         int sigFlags=buffer.leInt
-        listener.onEvent new SignatureEvent(
+        def sig = new SignatureEvent(
                 hashSize,
                 hash,
                 sigFlags
         )
+        listener.onEvent sig
         //check GBMB
         byte[] gbmbBuf=new byte[4]
         buffer.get(gbmbBuf)
         if(new String(gbmbBuf)=="GBMB"){
             listener.onEvent new EofEvent()
+            //validate signature
+            try {
+                channel=new RandomAccessFile(f,"r")
+                long readRemaining=channel.length()-(sig.hash.length+4/*flags*/+4/*GBMB*/)
+                byte[] tmp=new byte[1024]
+                MessageDigest digest=MessageDigest.getInstance(sig.hashNameFromFlag)
+                while(readRemaining!=0){
+                    int toRead=Math.min(readRemaining,tmp.length)
+                    int actualRead=channel.read(tmp,0,toRead)
+                    readRemaining-=actualRead
+                    digest.update(tmp,0,actualRead)
+                }
+                listener.onEvent new SignatureValidatedEvent(sig,Arrays.equals(digest.digest(),sig.hash))
+            } finally {
+                if(channel!=null)channel.close()
+                channel=null
+            }
         }else{
             listener.onEvent new ErrorEvent(new IllegalStateException("GBMB not detected: hex: ${Hex.encodeHexString(gbmbBuf)}"))
         }

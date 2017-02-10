@@ -9,7 +9,6 @@ import java.nio.ByteOrder
 class LocalFileReader implements Closeable{
     final File f
     final DataInputStream fis
-    boolean bigEndian
     LocalFileReader(File f){
         fis=(this.f=f).newDataInputStream()
     }
