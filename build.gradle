@@ -16,4 +16,5 @@ dependencies {
     compile 'com.google.guava:guava:21.0'
     compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-1'
     compile 'org.apache.commons:commons-compress:1.13'
+    compile 'commons-codec:commons-codec:1.10'
 }

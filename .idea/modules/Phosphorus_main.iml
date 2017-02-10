@@ -14,5 +14,6 @@
     <orderEntry type="library" name="Gradle: com.google.guava:guava:21.0" level="project" />
     <orderEntry type="library" name="Gradle: net.sf.jopt-simple:jopt-simple:6.0-alpha-1" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-compress:1.13" level="project" />
+    <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.10" level="project" />
   </component>
 </module>

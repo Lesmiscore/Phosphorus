@@ -2,6 +2,7 @@ package com.nao20010128nao.Phosphorus.phar
 
 import com.google.common.primitives.Bytes
 import com.nao20010128nao.Phosphorus.phar.events.*
+import org.apache.commons.codec.binary.Hex
 
 /**
  * Created by nao on 2017/02/09.
@@ -271,7 +272,7 @@ class PharParser implements Iterable<PharParserEvent>{
         if(new String(gbmbBuf)=="GBMB"){
             listener.onEvent new EofEvent()
         }else{
-            listener.onEvent new ErrorEvent(new IllegalStateException("GBMB not detected: hex: ${}"))
+            listener.onEvent new ErrorEvent(new IllegalStateException("GBMB not detected: hex: ${Hex.encodeHexString(gbmbBuf)}"))
         }
     }
 
