@@ -7,7 +7,6 @@ import joptsimple.OptionParser
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 import java.util.regex.Pattern
-import java.util.zip.GZIPInputStream
 import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
 
@@ -15,12 +14,18 @@ OptionParser opt=new OptionParser()
 opt.accepts("input").withRequiredArg()
 opt.accepts("output").withOptionalArg()
 opt.accepts("stub").withOptionalArg()
+opt.accepts("check")
 def result=opt.parse(args)
 
 File input,output,stub
 
 if(!result.has("input")){
-    println "input argument is required. e.g.) --input=(filename)"
+    println "input argument is required."
+    println "Usage:"
+    println "--input=(filename) - Input file name (full path) of the PHAR file. (required)"
+    println "--output=(dirname) - Output directory to save extracted result (default is input+\"_extracted\")"
+    println "--stub=(filename) - Relative path from output to save stub file (default is null, and never save)"
+    println "--check - Check the input from command line, and never save any file"
     System.exit 1
     return
 }else{
@@ -39,6 +44,10 @@ if(!result.has("stub")){
 }else{
     stub=new File(output,result.valueOf("stub").toString()).absoluteFile
     println "STUB: $stub"
+}
+
+if(result.has("check")){
+    System.exit 0
 }
 
 println "Parsing PHAR file..."
