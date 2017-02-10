@@ -61,9 +61,9 @@ parser.each {event->
         extractedStub=true
     }
     if(event instanceof RawFileEvent){
-        def decompress={
-            def manifest=((RawFileEvent)event).manifest
-            def raw=((RawFileEvent)event).raw
+        def decompress={RawFileEvent ev->
+            def manifest=ev.manifest
+            def raw=ev.raw
             if(manifest.notCompressed){
                 return raw
             }else if(manifest.zlibCompressed){
@@ -77,7 +77,7 @@ parser.each {event->
         println "Extract: ${event.manifest.fileNameString}"
         File dest=new File(output,event.manifest.fileNameString)
         dest.parentFile.mkdirs()
-        dest.bytes=decompress()
+        dest.bytes=decompress(event)
         extractedCount++
     }
 }
