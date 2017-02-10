@@ -60,12 +60,12 @@ class FileManifestEvent implements PharParserEvent{
 
     @Memoized
     boolean isZlibCompressed(){
-        bitFlags&0x00001000!=0
+        (bitFlags&0x00001000)!=0
     }
 
     @Memoized
     boolean isBzipCompressed(){
-        bitFlags&0x00002000!=0
+        (bitFlags&0x00002000)!=0
     }
 
     int getId() {

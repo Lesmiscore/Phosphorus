@@ -8,6 +8,8 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 import java.util.regex.Pattern
 import java.util.zip.GZIPInputStream
+import java.util.zip.Inflater
+import java.util.zip.InflaterInputStream
 
 OptionParser opt=new OptionParser()
 opt.accepts("input").withRequiredArg()
@@ -53,7 +55,7 @@ println "Extracting..."
 boolean extractedStub=false
 int extractedCount=0
 
-parser.each {event->
+parser.startReading {event->
     if(event instanceof StubEvent & stub!=null & !extractedStub){
         println "Extracting stub"
         stub.parentFile.mkdirs()
@@ -67,11 +69,11 @@ parser.each {event->
             if(manifest.notCompressed){
                 return raw
             }else if(manifest.zlibCompressed){
-                return new GZIPInputStream(new ByteArrayInputStream(raw)).bytes
+                return new InflaterInputStream(new ByteArrayInputStream(raw),new Inflater(true)).bytes
             }else if(manifest.bzipCompressed){
                 // Does php really compress with "bzip" instead of "bzip2"?
                 // Even php only supports "bzip2"?
-                return new BZip2CompressorInputStream(new ByteArrayInputStream(raw)).bytes
+                return new BZip2CompressorInputStream(new ByteArrayInputStream(raw),true).bytes
             }
         }
         println "Extract: ${event.manifest.fileNameString}"
