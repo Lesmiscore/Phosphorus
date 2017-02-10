@@ -71,8 +71,6 @@ parser.startReading {event->
             }else if(manifest.zlibCompressed){
                 return new InflaterInputStream(new ByteArrayInputStream(raw),new Inflater(true)).bytes
             }else if(manifest.bzipCompressed){
-                // Does php really compress with "bzip" instead of "bzip2"?
-                // Even php only supports "bzip2"?
                 return new BZip2CompressorInputStream(new ByteArrayInputStream(raw),true).bytes
             }
         }
