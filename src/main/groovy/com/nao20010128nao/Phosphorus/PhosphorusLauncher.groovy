@@ -54,11 +54,6 @@ if(result.has("check")){
 println "Parsing PHAR file..."
 
 def parser=new PharParser(input)
-try {
-    parser.readAll()
-} catch (e) {
-    e.printStackTrace()
-}
 
 println "Extracting..."
 
