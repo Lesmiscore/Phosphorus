@@ -1,6 +1,6 @@
 # Phosphorus (Atomic number: 15)
 A PHAR extractor for JVM written in Groovy   
-Never extract? Unable to extract? Let me try! (If the file is not broken)   
+Extraction restricted? Unable to extract? Let me try! (If the file is not broken)   
 
 # Usage
 In command line:
