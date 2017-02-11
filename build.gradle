@@ -1,3 +1,7 @@
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+
 group 'Phosphorus'
 version '1.0-SNAPSHOT'
 
@@ -17,4 +21,85 @@ dependencies {
     compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-1'
     compile 'org.apache.commons:commons-compress:1.13'
     compile 'commons-codec:commons-codec:1.10'
+}
+
+
+task("assembleExecutableJar",type: Jar){
+    dependsOn "copyGeneratedJar"
+    archiveName "Phosphorus.jar"
+    manifest {
+        attributes['Main-Class']="com.nao20010128nao.Phosphorus.PhosphorusLauncher"
+    }
+
+    from zipTree(new File(buildDir,"tmp/Phosphorus-${version}.jar"))
+}
+
+task("copyGeneratedJar",type: Copy){
+    dependsOn "gatherClasses"
+    def gathered=jar.archivePath
+    def tmp=new File(buildDir,"tmp")
+    into tmp
+    from(gathered.parentFile) {
+        include '*.jar'
+    }
+}
+
+task("gatherClasses"){
+    dependsOn "assemble"
+    doLast {
+        def exclude="^META-INF/.*\\.(SF|RSA|DSA|MF)\$"
+
+        def archive = jar.archivePath
+        def backup = new File("${archive.absolutePath}.bak")
+        backup.delete()
+        archive.renameTo(backup)
+        new ZipOutputStream(new BufferedOutputStream(archive.newOutputStream())).with { zos ->
+            zos.method = DEFLATED
+            //Merge libraries
+            project.configurations.compile*.toURI().each { singleJar ->
+                new ZipInputStream(new File(singleJar).newInputStream()).with { zis ->
+                    ZipEntry entry = null
+                    while ((entry = zis.nextEntry) != null) {
+                        if (entry.name.matches(exclude))
+                            continue
+                        try {
+                            zos.putNextEntry(new ZipEntry(entry.name))
+                            zos.write new UnclosableInputStreamWrapper(zis).bytes
+                            //System.console().readLine()
+                        } catch (e) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+            }
+            //Merge my code
+            new ZipInputStream(backup.newInputStream()).with { zis ->
+                ZipEntry entry = null
+                while ((entry = zis.nextEntry) != null) {
+                    if (entry.name.matches(exclude))
+                        continue
+                    try {
+                        zos.putNextEntry(new ZipEntry(entry.name))
+                        zos.write new UnclosableInputStreamWrapper(zis).bytes
+                        //System.console().readLine()
+                    } catch (e) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            zos.finish()
+            zos.close()
+        }
+    }
+}
+
+class UnclosableInputStreamWrapper extends FilterInputStream{
+    UnclosableInputStreamWrapper(InputStream inputStream) {
+        super(inputStream)
+    }
+    @Override
+    void close() throws IOException {
+    }
 }
