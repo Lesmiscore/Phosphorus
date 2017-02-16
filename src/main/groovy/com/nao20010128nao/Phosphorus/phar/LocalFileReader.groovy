@@ -7,8 +7,8 @@ import java.nio.ByteOrder
  * Created by nao on 2017/02/09.
  */
 class LocalFileReader implements Closeable{
-    final File f
-    final DataInputStream fis
+    File f
+    DataInputStream fis
     LocalFileReader(File f){
         fis=(this.f=f).newDataInputStream()
     }
@@ -31,6 +31,7 @@ class LocalFileReader implements Closeable{
 
     void close() throws IOException {
         fis.close()
+        fis=null
     }
 
     int getInt(){

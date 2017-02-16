@@ -61,87 +61,95 @@ class PharParser{
             channel=null
         }
 
-
-        def buffer=new LocalFileReader(f)
-        if(stubEnd!=-1){
-            byte[] readBuf=new byte[stubEnd]
-            buffer.get readBuf
-            listener.onEvent new StubEvent(readBuf)
-        }
-        //read manifest in LITTLE ENDIAN
-        int manifestTotal=buffer.leInt
-        int filesInsidePhar=buffer.leInt
-        short pharApiVersion=buffer.short
-        int globalFlags=buffer.leInt
-        int pharAliasesLength=buffer.leInt
-        byte[] pharAliases=new byte[pharAliasesLength]
-        buffer.get pharAliases
-        int pharMetadataLength=buffer.leInt
-        byte[] pharMetadata=new byte[pharMetadataLength]
-        buffer.get pharMetadata
-        listener.onEvent new ManifestEvent(
-                manifestTotal,
-                filesInsidePhar,
-                pharApiVersion,
-                globalFlags,
-                pharAliasesLength,
-                pharAliases,
-                pharMetadataLength,
-                pharMetadata
-        )
-        //read file manifest
-        List<FileManifestEvent> files=[]
-        filesInsidePhar.times {
-            int fileNameLength=buffer.leInt
-            byte[] fileName=new byte[fileNameLength]
-            buffer.get fileName
-            int nonCompressedFileSize=buffer.leInt
-            int unixFileTimeStamp=buffer.leInt
-            int compressedFileSize=buffer.leInt
-            int crc32Checksum=buffer.leInt
-            int bitFlags=buffer.leInt
-            int fileMetadataLength=buffer.leInt
-            byte[] fileMetadata=new byte[fileMetadataLength]
-            buffer.get fileMetadata
-            def event=new FileManifestEvent(
-                    fileNameLength,
-                    fileName,
-                    nonCompressedFileSize,
-                    unixFileTimeStamp,
-                    compressedFileSize,
-                    crc32Checksum,
-                    bitFlags,
-                    fileMetadataLength,
-                    fileMetadata
+        byte[] gbmbBuf =null
+        LocalFileReader buffer=null
+        SignatureEvent sig=null
+        try {
+            buffer = new LocalFileReader(f)
+            if (stubEnd != -1) {
+                byte[] readBuf = new byte[stubEnd]
+                buffer.get readBuf
+                listener.onEvent new StubEvent(readBuf)
+            }
+            //read manifest in LITTLE ENDIAN
+            int manifestTotal = buffer.leInt
+            int filesInsidePhar = buffer.leInt
+            short pharApiVersion = buffer.short
+            int globalFlags = buffer.leInt
+            int pharAliasesLength = buffer.leInt
+            byte[] pharAliases = new byte[pharAliasesLength]
+            buffer.get pharAliases
+            int pharMetadataLength = buffer.leInt
+            byte[] pharMetadata = new byte[pharMetadataLength]
+            buffer.get pharMetadata
+            listener.onEvent new ManifestEvent(
+                    manifestTotal,
+                    filesInsidePhar,
+                    pharApiVersion,
+                    globalFlags,
+                    pharAliasesLength,
+                    pharAliases,
+                    pharMetadataLength,
+                    pharMetadata
             )
-            listener.onEvent event
-            files+=event
+            //read file manifest
+            List<FileManifestEvent> files = []
+            filesInsidePhar.times {
+                int fileNameLength = buffer.leInt
+                byte[] fileName = new byte[fileNameLength]
+                buffer.get fileName
+                int nonCompressedFileSize = buffer.leInt
+                int unixFileTimeStamp = buffer.leInt
+                int compressedFileSize = buffer.leInt
+                int crc32Checksum = buffer.leInt
+                int bitFlags = buffer.leInt
+                int fileMetadataLength = buffer.leInt
+                byte[] fileMetadata = new byte[fileMetadataLength]
+                buffer.get fileMetadata
+                def event = new FileManifestEvent(
+                        fileNameLength,
+                        fileName,
+                        nonCompressedFileSize,
+                        unixFileTimeStamp,
+                        compressedFileSize,
+                        crc32Checksum,
+                        bitFlags,
+                        fileMetadataLength,
+                        fileMetadata
+                )
+                listener.onEvent event
+                files += event
+            }
+            //read files
+            files.each { event ->
+                byte[] fileBuffer = new byte[event.compressedFileSize]
+                buffer.get fileBuffer
+                listener.onEvent new RawFileEvent(fileBuffer, event)
+            }
+            //read signature
+            int remain = buffer.remaining()
+            int hashSize = remain - (4/*signature*/ + 4/*GBMB*/)
+            if (hashSize != 16 & hashSize != 20) {
+                listener.onEvent new ErrorEvent(new IllegalStateException("Wrong hash size: $hashSize"))
+                return
+            }
+            byte[] hash = new byte[hashSize]
+            buffer.get hash
+            int sigFlags = buffer.leInt
+            sig = new SignatureEvent(
+                    hashSize,
+                    hash,
+                    sigFlags
+            )
+            listener.onEvent sig
+            //check GBMB
+            gbmbBuf = new byte[4]
+            buffer.get(gbmbBuf)
+        }finally{
+            if(buffer!=null)
+                buffer.close()
+            buffer=null
         }
-        //read files
-        files.each {event->
-            byte[] fileBuffer=new byte[event.compressedFileSize]
-            buffer.get fileBuffer
-            listener.onEvent new RawFileEvent(fileBuffer,event)
-        }
-        //read signature
-        int remain=buffer.remaining()
-        int hashSize=remain-(4/*signature*/+4/*GBMB*/)
-        if(hashSize!=16&hashSize!=20) {
-            listener.onEvent new ErrorEvent(new IllegalStateException("Wrong hash size: $hashSize"))
-            return
-        }
-        byte[] hash=new byte[hashSize]
-        buffer.get hash
-        int sigFlags=buffer.leInt
-        def sig = new SignatureEvent(
-                hashSize,
-                hash,
-                sigFlags
-        )
-        listener.onEvent sig
-        //check GBMB
-        byte[] gbmbBuf=new byte[4]
-        buffer.get(gbmbBuf)
         if(new String(gbmbBuf)=="GBMB"){
             listener.onEvent new EofEvent()
             //validate signature
