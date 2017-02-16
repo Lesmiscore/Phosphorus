@@ -9,7 +9,7 @@ import java.security.MessageDigest
 /**
  * Created by nao on 2017/02/09.
  */
-class PharParser implements Iterable<PharParserEvent>{
+class PharParser{
     static final byte[] STUB_FINAL_A="?>".bytes
     static final byte[] STUB_FINAL_B="__HALT_COMPILER();".bytes
     static final byte[] STUB_FINAL_C="__halt_compiler();".bytes
@@ -18,10 +18,6 @@ class PharParser implements Iterable<PharParserEvent>{
 
     PharParser(File f){
         this.f=f
-    }
-
-    Iterator<PharParserEvent> iterator() {
-        Collections.unmodifiableList(list).iterator()
     }
 
     void startReading(OnEventListener listener){
